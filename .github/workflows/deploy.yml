@@ -1,44 +1,104 @@
-name: Terraform CI/CD
+
+name: Terraform Deploy
 
 on:
-  workflow_dispatch:
   push:
     branches:
       - main
-      - master
-  pull_request:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Choose the workflow action'
+        required: true
+        default: apply
+        type: choice
+        options:
+          - apply
+          - destroy
+
+permissions:
+  id-token: write
+  contents: read
 
 jobs:
   terraform:
-    name: Terraform Pipeline
+    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'apply')
     runs-on: ubuntu-latest
 
-    env:
-      TF_IN_AUTOMATION: true
-      TF_LOG: INFO
-
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Get AWS region from Terraform vars
+        id: get_aws_region
+        run: |
+          region=$(sed -n 's/.*default\s*=\s*"\(.*\)".*/\1/p' variable.tf | head -n 1)
+          if [ -z "$region" ]; then
+            echo "ERROR: Could not determine AWS region from variable.tf"
+            exit 1
+          fi
+          echo "region=$region" >> $GITHUB_OUTPUT
+
+      - name: Configure AWS Credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::211125606152:role/RoleforGithub
+          aws-region: ${{ steps.get_aws_region.outputs.region }}
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: 1.7.5   # adjust as needed
 
-      - name: Terraform Format
-        run: terraform fmt -check
-
-      - name: Terraform Init
-        run: terraform init
+      - name: Terraform Format Check
+        run: terraform fmt -check -recursive
 
       - name: Terraform Validate
         run: terraform validate
 
+      - name: Terraform Init
+        run: terraform init
+
       - name: Terraform Plan
         run: terraform plan -out=tfplan
 
-      # APPLY only on main branch
       - name: Terraform Apply
-        if: github.ref == 'refs/heads/main'
+        run: terraform apply -auto-approve tfplan
+
+  terraform-destroy:
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'destroy'
+    runs-on: ubuntu-latest
+    environment: destroy
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Get AWS region from Terraform vars
+        id: get_aws_region
+        run: |
+          region=$(sed -n 's/.*default\s*=\s*"\(.*\)".*/\1/p' variable.tf | head -n 1)
+          if [ -z "$region" ]; then
+            echo "ERROR: Could not determine AWS region from variable.tf"
+            exit 1
+          fi
+          echo "region=$region" >> $GITHUB_OUTPUT
+
+      - name: Configure AWS Credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::211125606152:role/RoleforGithub
+          aws-region: ${{ steps.get_aws_region.outputs.region }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Plan (Destroy)
+        run: terraform plan -destroy -out=tfplan
+
+      - name: Terraform Destroy
         run: terraform apply -auto-approve tfplan
