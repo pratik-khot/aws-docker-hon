@@ -10,7 +10,7 @@ resource "aws_vpc" "hon-practise-vpc" {
 resource "aws_subnet" "hon-practise-subnet-public" {
     vpc_id = aws_vpc.hon-practise-vpc.id
     cidr_block = "10.0.1.0/24"
-    availability_zone = var.region + "a"
+    availability_zone = "${var.region}a"
     map_public_ip_on_launch = true
     tags = {
         Name = "hon-practise-subnet-public"
@@ -20,7 +20,7 @@ resource "aws_subnet" "hon-practise-subnet-public" {
 resource "aws_subnet" "hon-practise-subnet-private" {
     vpc_id = aws_vpc.hon-practise-vpc.id
     cidr_block = "10.0.2.0/24"
-    availability_zone = var.region + "a"
+    availability_zone = "${var.region}a"
     tags = {
         Name = "hon-practise-subnet-private"
     }
@@ -98,7 +98,7 @@ resource "aws_vpc_security_group_ingress_rule" "public_inbound" {
     security_group_id = aws_security_group.public.id
     description = "Allow all inbound traffic for public subnet"
     ip_protocol = "-1"
-    cidr_ipv4 = ["0.0.0.0/0"]
+    cidr_ipv4 = "0.0.0.0/0"
 }
 
 resource "aws_vpc_security_group_egress_rule" "public_outbound" {
@@ -127,7 +127,7 @@ resource "aws_vpc_security_group_egress_rule" "private_outbound" {
     security_group_id = aws_security_group.private.id
     description = "Allow all outbound traffic for private subnet"
     ip_protocol = "-1"
-    cidr_ipv4 = ["0.0.0.0/0"]
+    cidr_ipv4 = "0.0.0.0/0"
 }
 
 
