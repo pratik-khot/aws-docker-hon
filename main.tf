@@ -38,17 +38,14 @@ resource "aws_eip" "nat-gw-eip" {
 }
 
 resource "aws_nat_gateway" "hon-practise-nat-gw" {
-    allocation_id = aws_eip.hon-practise-eip.id
+    allocation_id = aws_eip.nat-gw-eip.id
     subnet_id = aws_subnet.hon-practise-subnet-public.id
+    depends_on = [aws_internet_gateway.hon-practise-igw ]
     tags = {
         Name = "hon-practise-nat-gw"
     }
 }
 
-resource "aws_nat_gateway_eip_association" "example" {
-  allocation_id  = aws_eip.nat-gw-eip.id
-  nat_gateway_id = aws_nat_gateway.hon-practise-nat-gw.id
-}
 
 resource "aws_route_table" "hon-practise-rt-public" {
     vpc_id = aws_vpc.hon-practise-vpc.id
