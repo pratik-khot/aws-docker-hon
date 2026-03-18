@@ -91,11 +91,11 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
-      - name: Terraform Validate
-        run: terraform validate
-
       - name: Terraform Init
         run: terraform init
+
+      - name: Terraform Validate
+        run: terraform validate
 
       - name: Terraform Plan (Destroy)
         run: terraform plan -destroy -out=tfplan
