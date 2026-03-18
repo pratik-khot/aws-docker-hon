@@ -138,7 +138,7 @@ resource "aws_instance" "hon-practise-instance" {
     ami = data.aws_ami.latest.id
     instance_type = "t3.medium"
     subnet_id = aws_subnet.hon-practise-subnet-public.id
-    security_groups = [aws_security_group.public.name]
+    vpc_security_group_ids = [aws_security_group.public.id]
     key_name = aws_key_pair.deployer.key_name
     user_data = file("./userdata.sh")
 
