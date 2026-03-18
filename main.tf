@@ -140,12 +140,3 @@ resource "aws_instance" "hon-practise-instance" {
         Name = "hon-practise-instance"
     }
 }
-
-
-resource "aws_ec2_instance_connect_endpoint" "hon-practise-ec2-instance-connect-endpoint" {
-    subnet_id = aws_subnet.hon-practise-subnet-public.id
-    security_group_ids = [aws_security_group.public.id]
-    tags = {
-        Name = "hon-practise-ec2-instance-connect-endpoint"
-    }
-}
