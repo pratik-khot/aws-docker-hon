@@ -19,9 +19,5 @@ data "aws_key_pair" "example" {
   region =  var.region
   include_public_key = true
 
-  filter {
-    name   = "tag:Component"
-    values = ["web"]
-  }
 }
 

@@ -7,5 +7,5 @@ variable region {
 variable "key_name" {
   description = "key name to use for creation of ec2 instances"
   type = string
-    default = "my-kp"
+  default = "my-kp"
 }
