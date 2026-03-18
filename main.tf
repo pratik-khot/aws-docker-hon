@@ -116,7 +116,7 @@ resource "aws_vpc_security_group_ingress_rule" "private_inbound" {
     security_group_id = aws_security_group.private.id
     description = "Allow inbound traffic from public subnet for private subnet"
     ip_protocol = "-1"
-    cidr_ipv4 = [aws_subnet.hon-practise-subnet-public.cidr_block]
+    cidr_ipv4 = aws_subnet.hon-practise-subnet-public.cidr_block
 }
 
 
