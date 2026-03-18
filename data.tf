@@ -12,3 +12,16 @@ data "aws_ami" "latest" {
 
   owners = ["099720109477"] # Canonical
 }
+
+
+data "aws_key_pair" "example" {
+  key_name           = var.key_name
+  region =  var.region
+  include_public_key = true
+
+  filter {
+    name   = "tag:Component"
+    values = ["web"]
+  }
+}
+

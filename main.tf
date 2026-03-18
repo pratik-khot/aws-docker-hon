@@ -139,7 +139,7 @@ resource "aws_instance" "hon-practise-instance" {
     instance_type = "t3.medium"
     subnet_id = aws_subnet.hon-practise-subnet-public.id
     vpc_security_group_ids = [aws_security_group.public.id]
-    key_name = aws_key_pair.deployer.key_name
+    key_name = data.aws_key_pair.example.key_name
     user_data = file("./userdata.sh")
 
     tags = {
