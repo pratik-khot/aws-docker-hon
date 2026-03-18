@@ -33,12 +33,21 @@ resource "aws_internet_gateway" "hon-practise-igw" {
     }
 }
 
+resource "aws_eip" "nat-gw-eip" {
+
+}
+
 resource "aws_nat_gateway" "hon-practise-nat-gw" {
     allocation_id = aws_eip.hon-practise-eip.id
     subnet_id = aws_subnet.hon-practise-subnet-public.id
     tags = {
         Name = "hon-practise-nat-gw"
     }
+}
+
+resource "aws_nat_gateway_eip_association" "example" {
+  allocation_id  = aws_eip.nat-gw-eip.id
+  nat_gateway_id = aws_nat_gateway.hon-practise-nat-gw.id
 }
 
 resource "aws_route_table" "hon-practise-rt-public" {
@@ -85,21 +94,17 @@ resource "aws_security_group" "public" {
   
 }
 
-resource "aws_security_group_ingress_rule" "public_inbound" {
+resource "aws_vpc_security_group_ingress_rule" "public_inbound" {
     security_group_id = aws_security_group.public.id
     description = "Allow all inbound traffic for public subnet"
-    type = "ingress"
-    protocol = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+    ip_protocol = "-1"
+    cidr_ipv4 = ["0.0.0.0/0"]
 }
 
-resource "aws_security_group_egress_rule" "all_outbound" {
-    security_group_id = aws_security_group.public.id
-    description = "Allow all outbound traffic for public subnet"
-    type = "egress"
-    protocol = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  
+resource "aws_vpc_security_group_egress_rule" "public_outbound" {
+  security_group_id = aws_security_group.public.id
+  cidr_ipv4         = "0.0.0.0/0"
+  ip_protocol       = "-1"  # all traffic
 }
 
 
@@ -110,32 +115,19 @@ resource "aws_security_group" "private" {
 
 }
 
-resource "aws_security_group_ingress_rule" "private_inbound" {
+resource "aws_vpc_security_group_ingress_rule" "private_inbound" {
     security_group_id = aws_security_group.private.id
     description = "Allow inbound traffic from public subnet for private subnet"
-    type = "ingress"
-    protocol = "-1"
-    cidr_blocks = [aws_subnet.hon-practise-subnet-public.cidr_block]
+    ip_protocol = "-1"
+    cidr_ipv4 = [aws_subnet.hon-practise-subnet-public.cidr_block]
 }
 
 
-resource "aws_security_group_egress_rule" "private_outbound" {
+resource "aws_vpc_security_group_egress_rule" "private_outbound" {
     security_group_id = aws_security_group.private.id
     description = "Allow all outbound traffic for private subnet"
-    type = "egress"
-    protocol = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-}
-
-
-resource "aws_security_group_association" "public" {
-    security_group_id = aws_security_group.public.id
-    subnet_id = aws_subnet.hon-practise-subnet-public.id
-}
-
-resource "aws_security_group_association" "private" {
-    security_group_id = aws_security_group.private.id
-    subnet_id = aws_subnet.hon-practise-subnet-private.id
+    ip_protocol = "-1"
+    cidr_ipv4 = ["0.0.0.0/0"]
 }
 
 
