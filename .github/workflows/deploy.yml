@@ -2,8 +2,12 @@
 name: Terraform Deploy
 
 on:
-  #uncomment the following lines to trigger the workflow on push to main branch
+  #uncomment the following lines to trigger the workflow on push or pull_request to main branch
   # push:
+  #   branches:
+  #     - main
+
+  # pull_request:
   #   branches:
   #     - main
   workflow_dispatch:
