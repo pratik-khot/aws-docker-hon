@@ -2,14 +2,14 @@
 name: Terraform Deploy
 
 on:
-  #uncomment the following lines to trigger the workflow on push or pull_request to main branch
-  # push:
-  #   branches:
-  #     - main
+  push:
+    branches:
+      - main
 
-  # pull_request:
-  #   branches:
-  #     - main
+  pull_request:
+    branches:
+      - main
+
   workflow_dispatch:
     inputs:
       action:
@@ -26,6 +26,51 @@ permissions:
   contents: read
 
 jobs:
+  terraform-plan-pr:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Get AWS region from secret or variable.tf
+        id: get_aws_region
+        env:
+          AWS_REGION_SECRET: ${{ secrets.AWS_REGION }}
+        run: |
+          if [ -n "$AWS_REGION_SECRET" ]; then
+            region="$AWS_REGION_SECRET"
+          else
+            region=$(sed -n 's/.*default\s*=\s*"\(.*\)".*/\1/p' variable.tf | head -n 1)
+          fi
+          if [ -z "$region" ]; then
+            echo "ERROR: Could not determine AWS region from secret or variable.tf"
+            exit 1
+          fi
+          echo "region=$region" >> $GITHUB_OUTPUT
+
+      - name: Configure AWS Credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ steps.get_aws_region.outputs.region }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Format
+        run: terraform fmt -recursive
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Terraform Plan
+        run: terraform plan -out=tfplan
+
   terraform-deploy:
     if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'apply')
     runs-on: ubuntu-latest
@@ -34,12 +79,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Get AWS region from Terraform vars
+      - name: Get AWS region from secret or variable.tf
         id: get_aws_region
+        env:
+          AWS_REGION_SECRET: ${{ secrets.AWS_REGION }}
         run: |
-          region=$(sed -n 's/.*default\s*=\s*"\(.*\)".*/\1/p' variable.tf | head -n 1)
+          if [ -n "$AWS_REGION_SECRET" ]; then
+            region="$AWS_REGION_SECRET"
+          else
+            region=$(sed -n 's/.*default\s*=\s*"\(.*\)".*/\1/p' variable.tf | head -n 1)
+          fi
           if [ -z "$region" ]; then
-            echo "ERROR: Could not determine AWS region from variable.tf"
+            echo "ERROR: Could not determine AWS region from secret or variable.tf"
             exit 1
           fi
           echo "region=$region" >> $GITHUB_OUTPUT
@@ -47,7 +98,7 @@ jobs:
       - name: Configure AWS Credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::900335273390:role/RoleForGHA
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
           aws-region: ${{ steps.get_aws_region.outputs.region }}
 
       - name: Setup Terraform
@@ -77,12 +128,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Get AWS region from Terraform vars
+      - name: Get AWS region from secret or variable.tf
         id: get_aws_region
+        env:
+          AWS_REGION_SECRET: ${{ secrets.AWS_REGION }}
         run: |
-          region=$(sed -n 's/.*default\s*=\s*"\(.*\)".*/\1/p' variable.tf | head -n 1)
+          if [ -n "$AWS_REGION_SECRET" ]; then
+            region="$AWS_REGION_SECRET"
+          else
+            region=$(sed -n 's/.*default\s*=\s*"\(.*\)".*/\1/p' variable.tf | head -n 1)
+          fi
           if [ -z "$region" ]; then
-            echo "ERROR: Could not determine AWS region from variable.tf"
+            echo "ERROR: Could not determine AWS region from secret or variable.tf"
             exit 1
           fi
           echo "region=$region" >> $GITHUB_OUTPUT
@@ -90,7 +147,7 @@ jobs:
       - name: Configure AWS Credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::900335273390:role/RoleForGHA
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
           aws-region: ${{ steps.get_aws_region.outputs.region }}
 
       - name: Setup Terraform
