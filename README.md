@@ -22,6 +22,37 @@ Add the following secrets in your repository settings (`Settings > Secrets and v
 - `AWS_ROLE_TO_ASSUME`: The ARN of the IAM role for GitHub Actions (e.g., `arn:aws:iam::123456789012:role/GitHubActionsRole`)
 - `AWS_REGION`: The AWS region for deployments (e.g., `us-east-1`)
 
+## Terraform Remote State (S3 Backend)
+
+1. Create an S3 bucket for Terraform state (versioning and encryption recommended).
+2. Create a DynamoDB table for state locking (optional but recommended).
+3. Update `backend.tf` with your bucket name, state key path, and region, e.g.:
+
+```hcl
+terraform {
+  backend "s3" {
+    bucket = "your-state-bucket"
+    key    = "docker-hon/dev/terraform.tfstate"
+    region = "us-east-1"
+  }
+}
+```
+
+## EC2 Key Pair
+
+This project uses `variable.tf` with `key_name` for EC2 instance SSH key pair:
+
+```hcl
+variable "key_name" {
+  description = "key name to use for creation of ec2 instances"
+  type        = string
+  default     = "my-kp"
+}
+```
+
+1. Create or import an EC2 key pair in AWS (`aws ec2 create-key-pair ...`) in the same region.
+2. Set `key_name` in `terraform.tfvars` or `-var` argument, or update default in `variable.tf`.
+
 ## Usage
 
 ### Local Development
