@@ -27,3 +27,7 @@ sudo systemctl enable docker
 
 # Add ubuntu user to docker group
 sudo usermod -aG docker ubuntu
+
+#Clone repo for practise
+
+git clone https://github.com/BretFisher/udemy-docker-mastery.git
