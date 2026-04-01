@@ -30,4 +30,4 @@ sudo usermod -aG docker ubuntu
 
 #Clone repo for practise
 
-git clone https://github.com/BretFisher/udemy-docker-mastery.git
+sudo -u ubuntu git clone https://github.com/BretFisher/udemy-docker-mastery.git  /home/ubuntu/udemy-docker-mastery
